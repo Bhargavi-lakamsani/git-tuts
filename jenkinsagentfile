@@ -28,12 +28,13 @@ pipeline {
             agent { label 'agent1' }
             steps {
                 script {
-                    println "Performing Stage 2 in agent1"
+                    println "Performing Stage 2 in Agent 1"
                 }
             }
             post {
                 success {
                     echo 'Stage 2 completed successfully'
+                    currentBuild.result = 'SUCCESS' // Set the build result to SUCCESS
                 }
             }
         }
@@ -43,16 +44,18 @@ pipeline {
                 allOf {
                     expression { params.CHOICE_ENV == 'Option 1' }
                     branch 'master'
+                    beforeAgent true
                 }
             }
             steps {
                 script {
-                    println "Performing Stage 3 in agent2"
+                    println "Performing Stage 3 in Agent 2"
                 }
             }
             post {
                 success {
                     echo 'Stage 3 completed successfully'
+                    currentBuild.result = 'SUCCESS' // Set the build result to SUCCESS
                 }
             }
         }
@@ -61,7 +64,7 @@ pipeline {
             when {
                 allOf {
                     expression { params.BOOLEAN_ENV }
-                    previousStage 'Stage 3'
+                    beforeAgent true
                 }
             }
             steps {
@@ -72,6 +75,7 @@ pipeline {
             post {
                 success {
                     echo 'Stage 4 completed successfully'
+                    currentBuild.result = 'SUCCESS' // Set the build result to SUCCESS
                 }
             }
         }
