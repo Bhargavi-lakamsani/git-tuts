@@ -40,7 +40,7 @@ pipeline {
         }
         post { 
           success {
-              echo " stage 2 completed successfully
+              echo " stage 2 completed successfully"
                 }
             }
         }
@@ -62,7 +62,7 @@ pipeline {
     }
        post { 
           success {
-              echo " stage 3 completed successfully
+              echo " stage 3 completed successfully"
                 }
             }
       }
