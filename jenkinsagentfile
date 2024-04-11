@@ -1,1 +1,85 @@
+pipeline {
+    agent none
+    triggers {
+         cron '1 * * * *' 
+         pollSCM '1 * * * *' 
+         }
 
+    parameters {
+			string (defaultValue: 'Bhargavi', description: 'Enter the ENV value', name: 'PERSON_NAME')
+			choice (name: 'ROLE_TYPE', choices: ['DEV', 'PROD', 'TEST'], description: '')
+			booleanParam(name: 'AGE', defaultValue: true, description: 'Age is greater than 18 or not')
+    }
+    environment {
+                JOB_NAME = "$JOB_NAME" 
+                BUILD_URL  = "$BUILD_URL"
+                BUILD_NUMBER = "$BUILD_NUMBER"
+                PERSON_NAME = "$PERSON_NAME"
+                ROLE_TYPE = "$ROLE_TYPE"
+                AGE = "$AGE"
+            }
+            
+    stages {
+        stage('Stage 1') {
+            agent { label 'agent1' }
+          
+            steps {
+             echo "the job name is $JOB_NAME"
+             echo "the build url is $BUILD_URL"
+             echo "the build number is $BUILD_NUMBER"
+            }
+        }
+        stage('Stage 2') {
+            agent {label 'agent1'}
+            
+            steps {
+            git branch: 'master', credentialsId: 'github', url:  'https://github.com/Bhargavi-lakamsani/git-tuts.git'
+            echo "the person name  is $PERSON_NAME"
+            echo "the role type is $ROLE_TYPE"
+            echo "the age of the person is $AGE"
+                
+            }
+        }
+        stage('Stage 3') {
+            agent { label 'agent2' }
+               when {
+                 allOf {
+                    branch 'master'
+                     expression {
+                      currentBuild.result == 'SUCCESS'
+            }
+        }
+    }
+    environment {
+        secretText = credentials('MY_TOKEN')
+        usernamePassword = credentialsId('MY_USER_NAME')
+    }
+    steps {
+        echo "my secretText is $secretText"
+        echo "my usernamePassword is $secretText"
+    }
+}
+
+stage('Stage 4') {
+    agent { label 'agent2' }
+    when {
+        allOf {
+            expression {
+                return currentBuild.result == 'SUCCESS'
+            }
+        }
+    }
+    steps {
+        echo "All the builds are successful"
+    }
+    post {
+        success {
+            echo "Sending mail notification"
+            emailext body: "Hi,\nPlease find job details below:\nJOB_NAME: ${JOB_NAME}, BUILD_NUMBER: ${BUILD_NUMBER}\nJOB_URL: ${BUILD_URL}\nThank you,\nBhargavi", 
+                     subject: "Build Status", 
+                     to: "navatabhargavi@gmail.com"
+        }
+    }
+  }
+}
+}
