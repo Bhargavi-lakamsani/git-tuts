@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        ENV_VAR_STRING = "Bhargavi"
+        ENV_VAR_STRING = "This is a string value"
         ENV_VAR_CHOICE = "DEV"
         ENV_VAR_BOOLEAN = true
     }
@@ -36,6 +36,7 @@ pipeline {
             post { 
                 success {
                     echo "Stage 2 completed successfully"
+                    build 'Agent 2 - Stage 3' // Triggering Stage 3 after Stage 2
                 }
             }
         }
@@ -64,6 +65,7 @@ pipeline {
             post { 
                 success {
                     echo "Stage 3 completed successfully"
+                    build 'Agent 2 - Stage 4' // Triggering Stage 4 after Stage 3
                 }
             }
         }
@@ -75,7 +77,6 @@ pipeline {
                     expression {
                         return currentBuild.result == 'SUCCESS'
                     }
-                    previousStage 'Agent 2 - Stage 3'
                 }
             }
             steps {
@@ -86,7 +87,7 @@ pipeline {
                     echo "Stage 4 completed successfully"
                     emailext body: "Hi,\nStage 4 completed successfully.\nThank you.", 
                              subject: "Pipeline Build Status", 
-                             to: "navatabhargavi@email.com"
+                             to: "navatabhargavi@gmail.com"
                 }
             }
         }
