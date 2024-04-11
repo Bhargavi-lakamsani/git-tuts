@@ -36,7 +36,7 @@ pipeline {
             post { 
                 success {
                     echo "Stage 2 completed successfully"
-                    build 'Agent 2 - Stage 3' // Triggering Stage 3 after Stage 2
+                    build job: 'Agent 2 - Stage 3', wait: false // Triggering Stage 3 after Stage 2
                 }
             }
         }
@@ -65,7 +65,7 @@ pipeline {
             post { 
                 success {
                     echo "Stage 3 completed successfully"
-                    build 'Agent 2 - Stage 4' // Triggering Stage 4 after Stage 3
+                    build job: 'Agent 2 - Stage 4', wait: false // Triggering Stage 4 after Stage 3
                 }
             }
         }
