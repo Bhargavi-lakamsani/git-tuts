@@ -44,7 +44,6 @@ pipeline {
                 allOf {
                     expression { params.CHOICE_ENV == 'Option 1' }
                     branch 'master'
-                    beforeagent true
                 }
             }
             steps {
@@ -61,12 +60,6 @@ pipeline {
         }
         stage('Stage 4') {
             agent { label 'agent2' }
-            when {
-                allOf {
-                    expression { params.BOOLEAN_ENV }
-                    beforeagent true
-                }
-            }
             steps {
                 script {
                     println "Performing Stage 4 in agent2"
