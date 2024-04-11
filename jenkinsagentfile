@@ -37,17 +37,19 @@ pipeline {
             echo "the person name  is $PERSON_NAME"
             echo "the role type is $ROLE_TYPE"
             echo "the age of the person is $AGE"
-                
+        }
+        post { 
+          success {
+              echo " stage 2 completed successfully
+                }
             }
         }
         stage('Stage 3') {
             agent { label 'agent2' }
                when {
                  allOf {
-                    branch 'master'
-                     expression {
-                      currentBuild.result == 'SUCCESS'
-            }
+                    expression { branch 'master, DEV'
+                }
         }
     }
     environment {
@@ -58,7 +60,12 @@ pipeline {
         echo "my secretText is $secretText"
         echo "my usernamePassword is $secretText"
     }
-}
+       post { 
+          success {
+              echo " stage 3 completed successfully
+                }
+            }
+      }
 
 stage('Stage 4') {
     agent { label 'agent2' }
@@ -73,7 +80,7 @@ stage('Stage 4') {
         echo "All the builds are successful"
     }
     post {
-        success {
+        always {
             echo "Sending mail notification"
             emailext body: "Hi,\nPlease find job details below:\nJOB_NAME: ${JOB_NAME}, BUILD_NUMBER: ${BUILD_NUMBER}\nJOB_URL: ${BUILD_URL}\nThank you,\nBhargavi", 
                      subject: "Build Status", 
