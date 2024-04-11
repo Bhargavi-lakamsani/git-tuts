@@ -1,95 +1,98 @@
 pipeline {
     agent none
-    triggers {
-        cron 'H/5 * * * *' // Trigger every 5 minutes
-        pollSCM 'H/5 * * * *' // Poll SCM every 5 minutes
-    }
-
     environment {
-        ENV_VAR_STRING = "This is a string value"
-        ENV_VAR_CHOICE = "DEV"
-        ENV_VAR_BOOLEAN = true
+        ENV_VAR_STRING = "${params.STRING_ENV}"
+        ENV_VAR_CHOICE = "${params.CHOICE_ENV}"
+        ENV_VAR_BOOLEAN = "${params.BOOLEAN_ENV}"
     }
-
+    parameters {
+        string(name: 'STRING_ENV', defaultValue: 'Default String Value', description: 'Enter a string value')
+        choice(name: 'CHOICE_ENV', choices: ['Option 1', 'Option 2'], description: 'Choose an option')
+        booleanParam(name: 'BOOLEAN_ENV', defaultValue: true, description: 'Select true or false')
+    }
     stages {
-        stage('Agent 1 - Stage 1') {
+        stage('Stage 1') {
             agent { label 'agent1' }
             steps {
                 script {
-                    println "Global variable BUILD_NUMBER: ${env.BUILD_NUMBER}"
-                    println "Global variable BUILD_URL: ${env.BUILD_URL}"
-                    println "Global variable JOB_NAME: ${env.JOB_NAME}"
+                    println "Global variable BUILD_NUMBER: ${BUILD_NUMBER}"
+                    println "Global variable BUILD_URL: ${BUILD_URL}"
+                    println "Global variable JOB_NAME: ${JOB_NAME}"
                     println "Environment variable ENV_VAR_STRING: ${ENV_VAR_STRING}"
                     println "Environment variable ENV_VAR_CHOICE: ${ENV_VAR_CHOICE}"
                     println "Environment variable ENV_VAR_BOOLEAN: ${ENV_VAR_BOOLEAN}"
                 }
             }
         }
-
-        stage('Agent 1 - Stage 2') {
+        stage('Stage 2') {
             agent { label 'agent1' }
             steps {
                 script {
-                    echo "Performing Stage 2 in Agent 1"
+                    println "Performing Stage 2 in agent1"
                 }
-            }
-            post { 
-                success {
-                    echo "Stage 2 completed successfully"
-                    build job: 'Agent 2 - Stage 3', wait: false // Triggering Stage 3 after Stage 2
-                }
-            }
-        }
-
-        stage('Agent 2 - Stage 3') {
-            agent { label 'agent2' }
-            when {
-                allOf {
-                    branch 'master, DEV'
-                    expression {
-                        return currentBuild.result == 'SUCCESS'
-                    }
-                }
-            }
-            environment {
-                SECRET_TEXT = credentials('MY_SECRET_TEXT')
-                USERNAME = credentialsId('MY_USERNAME')
-                PASSWORD = credentialsId('MY_PASSWORD')
-            }
-            steps {
-                echo "Performing Stage 3 in Agent 2"
-                echo "Secret Text: $SECRET_TEXT"
-                echo "Username: $USERNAME"
-                echo "Password: $PASSWORD"
-            }
-            post { 
-                success {
-                    echo "Stage 3 completed successfully"
-                    build job: 'Agent 2 - Stage 4', wait: false // Triggering Stage 4 after Stage 3
-                }
-            }
-        }
-
-        stage('Agent 2 - Stage 4') {
-            agent { label 'agent2' }
-            when {
-                allOf {
-                    expression {
-                        return currentBuild.result == 'SUCCESS'
-                    }
-                }
-            }
-            steps {
-                echo "Performing Stage 4 in Agent 2"
             }
             post {
                 success {
-                    echo "Stage 4 completed successfully"
-                    emailext body: "Hi,\nStage 4 completed successfully.\nThank you.", 
-                             subject: "Pipeline Build Status", 
-                             to: "navatabhargavi@gmail.com"
+                    echo 'Stage 2 completed successfully'
                 }
             }
+        }
+        stage('Stage 3') {
+            agent { label 'agent2' }
+            when {
+                allOf {
+                    expression { params.CHOICE_ENV == 'Option 1' }
+                    branch 'master'
+                }
+            }
+            steps {
+                script {
+                    println "Performing Stage 3 in agent2"
+                }
+            }
+            post {
+                success {
+                    echo 'Stage 3 completed successfully'
+                }
+            }
+        }
+        stage('Stage 4') {
+            agent { label 'agent2' }
+            when {
+                allOf {
+                    expression { params.BOOLEAN_ENV }
+                    previousStage 'Stage 3'
+                }
+            }
+            steps {
+                script {
+                    println "Performing Stage 4 in Agent 2"
+                }
+            }
+            post {
+                success {
+                    echo 'Stage 4 completed successfully'
+                }
+            }
+        }
+    }
+    triggers {
+        cron('H/5 * * * *')
+        pollSCM('* * * * *')
+    }
+    post {
+        always {
+            echo 'Pipeline completed'
+        }
+        success {
+            mail to: 'navatabhargavi@gmail.com',
+                subject: "Pipeline ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} Successful",
+                body: "Congratulations! Your Jenkins pipeline build was successful."
+        }
+        failure {
+            mail to: 'navatabhargavi@gmail.com',
+                subject: "Pipeline ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} Failed",
+                body: "Sorry, your Jenkins pipeline build failed. Please check the logs for details."
         }
     }
 }
