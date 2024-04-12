@@ -1,7 +1,6 @@
-pipeline {
+pipeline{
     agent none
 
-    }
     environment {
         ENV_VAR_STRING = "${params.STRING_ENV}"
         ENV_VAR_CHOICE = "${params.CHOICE_ENV}"
@@ -85,11 +84,12 @@ pipeline {
             }
         }
     }
+    
     triggers {
         cron('H/5 * * * *')
         pollSCM('* * * * *')
     }
-    post {
+    post 
         always {
             echo 'Pipeline completed'
         }
@@ -104,4 +104,3 @@ pipeline {
                 body: "Sorry, your Jenkins pipeline build failed. Please check the logs for details."
         }
     }
-}
