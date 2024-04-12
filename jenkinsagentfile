@@ -39,48 +39,47 @@ pipeline {
             }
         }
         stage('Stage 3') {
-            agent { label 'agent2' }
-            when {
-                allOf {
-                    branch 'master'
-                    expression { params.CHOICE_ENV == 'Option 1' }
-                    expression { success_of_stage_2 == true }
-                }
-            }
-            steps {
-                script {
-                    println "Performing Stage 3 in agent2"
-                }
-            }
-            post {
-                success {
-                    echo 'Stage 3 completed successfully'
-                    script {
-                        success_of_stage_3 = true
-                    }
-                }
-            }
-        }
-        stage('Stage 4') {
-            agent { label 'agent2' }
-            when {
-                allOf {
-                    expression { params.BOOLEAN_ENV }
-                    expression { success_of_stage_3 == true }
-                }
-            }
-            steps {
-                script {
-                    println "Performing Stage 4 in Agent 2"
-                }
-            }
-            post {
-                success {
-                    echo 'Stage 4 completed successfully'
-                }
-            }
+    agent { label 'agent2' }
+    when {
+        allOf {
+            expression { params.CHOICE_ENV == 'Option 1' }
+            branch 'master'
+            previousStage().result == 'SUCCESS'
         }
     }
+    steps {
+        script {
+            println "Performing Stage 3 in agent2"
+        }
+    }
+    post {
+        success {
+            echo 'Stage 3 completed successfully'
+        }
+    }
+}
+
+        stage('Stage 4') {
+    agent { label 'agent2' }
+    when {
+        allOf {
+            expression { params.BOOLEAN_ENV }
+            branch 'master'
+            previousStage().result == 'SUCCESS'
+        }
+    }
+    steps {
+        script {
+            println "Performing Stage 4 in Agent 2"
+        }
+    }
+    post {
+        success {
+            echo 'Stage 4 completed successfully'
+        }
+    }
+}
+
     triggers {
         cron('H/5 * * * *')
         pollSCM('* * * * *')
