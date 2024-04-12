@@ -6,9 +6,9 @@ pipeline {
         ENV_VAR_BOOLEAN = "${params.BOOLEAN_ENV}"
     }
     parameters {
-        string(name: 'STRING_ENV', defaultValue: 'Default String Value', description: 'Enter a string value')
-        choice(name: 'CHOICE_ENV', choices: ['Option 1', 'Option 2'], description: 'Choose an option')
-        booleanParam(name: 'BOOLEAN_ENV', defaultValue: true, description: 'Select true or false')
+        string(name: 'STRING_ENV', defaultValue: 'Bhargavi', description: 'Enter a string value')
+        choice(name: 'CHOICE_ENV', choices: ['DEV', 'PROD', 'TEST',], description: 'Choose an option')
+        booleanParam(name: 'BOOLEAN_ENV', defaultValue: true,)
     }
     stages {
         stage('Stage 1') {
