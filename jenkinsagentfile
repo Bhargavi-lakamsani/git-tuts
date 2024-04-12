@@ -1,33 +1,24 @@
-pipeline{
+pipeline {
     agent none
-
     environment {
         ENV_VAR_STRING = "${params.STRING_ENV}"
         ENV_VAR_CHOICE = "${params.CHOICE_ENV}"
         ENV_VAR_BOOLEAN = "${params.BOOLEAN_ENV}"
     }
-    
-   parameters {
-      string defaultValue: 'Bhargavi', description: 'choose your name', name: 'STRING_ENV'
-      choice choices: ['DEV', 'PROD', 'TEST'], description: 'choose your choice', name: 'CHOICE_ENV'
-      booleanParam defaultValue: true, description: 'default value true', name: 'BOOLEAN_EN'
-}
-  
+    parameters {
+        string(name: 'STRING_ENV', defaultValue: 'Default String Value', description: 'Enter a string value')
+        choice(name: 'CHOICE_ENV', choices: ['Option 1', 'Option 2'], description: 'Choose an option')
+        booleanParam(name: 'BOOLEAN_ENV', defaultValue: true, description: 'Select true or false')
+    }
     stages {
         stage('Stage 1') {
             agent { label 'agent1' }
             steps {
                 script {
-                    // Access and use the environment variables
-                    echo "String Environment Variable: ${ENV_VAR_STRING}"
-                    echo "Choice Environment Variable: ${ENV_VAR_CHOICE}"
-                    echo "Boolean Environment Variable: ${ENV_VAR_BOOLEAN}"
-                    
-                    // Use global variables
-                    echo "Build Number: ${BUILD_NUMBER}"
-                    echo "Job Name: ${JOB_NAME}"
-                    echo "Workspace: ${WORKSPACE}"
-                    echo "Node Name: ${NODE_NAME}"
+                    println "Performing Stage 1"
+                    println "String Environment Variable: ${ENV_VAR_STRING}"
+                    println "Choice Environment Variable: ${ENV_VAR_CHOICE}"
+                    println "Boolean Environment Variable: ${ENV_VAR_BOOLEAN}"
                 }
             }
         }
@@ -41,6 +32,9 @@ pipeline{
             post {
                 success {
                     echo 'Stage 2 completed successfully'
+                    script {
+                        success_of_stage_2 = true
+                    }
                 }
             }
         }
@@ -48,9 +42,9 @@ pipeline{
             agent { label 'agent2' }
             when {
                 allOf {
-                    expression { params.CHOICE_ENV == 'DEV' }
-                    expression { success_of_stage_2 == true }
                     branch 'master'
+                    expression { params.CHOICE_ENV == 'Option 1' }
+                    expression { success_of_stage_2 == true }
                 }
             }
             steps {
@@ -61,6 +55,9 @@ pipeline{
             post {
                 success {
                     echo 'Stage 3 completed successfully'
+                    script {
+                        success_of_stage_3 = true
+                    }
                 }
             }
         }
@@ -84,12 +81,11 @@ pipeline{
             }
         }
     }
-    
     triggers {
         cron('H/5 * * * *')
         pollSCM('* * * * *')
     }
-    post 
+    post {
         always {
             echo 'Pipeline completed'
         }
@@ -104,3 +100,4 @@ pipeline{
                 body: "Sorry, your Jenkins pipeline build failed. Please check the logs for details."
         }
     }
+}
