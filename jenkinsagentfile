@@ -1,26 +1,36 @@
 pipeline {
     agent none
+    triggers {
+        cron('H/5 * * * *')
+        pollSCM('* * * * *')
+    }
     environment {
         ENV_VAR_STRING = "${params.STRING_ENV}"
         ENV_VAR_CHOICE = "${params.CHOICE_ENV}"
         ENV_VAR_BOOLEAN = "${params.BOOLEAN_ENV}"
     }
-    parameters {
-        string(name: 'STRING_ENV', defaultValue: 'Bhargavi', description: 'Enter a string value')
-        choice(name: 'CHOICE_ENV', choices: ['DEV', 'PROD', 'TEST',], description: 'Choose an option')
-        booleanParam(name: 'BOOLEAN_ENV', defaultValue: true,)
-    }
+    
+   parameters {
+      string defaultValue: 'Bhargavi', description: 'choose your name', name: 'STRING_ENV'
+      choice choices: ['DEV', 'PROD', 'TEST'], description: 'choose your choice', name: 'CHOICE_ENV'
+      booleanParam defaultValue: true, description: 'default value true', name: 'BOOLEAN_EN'
+}
+  
     stages {
         stage('Stage 1') {
             agent { label 'agent1' }
             steps {
                 script {
-                    println "Global variable BUILD_NUMBER: ${BUILD_NUMBER}"
-                    println "Global variable BUILD_URL: ${BUILD_URL}"
-                    println "Global variable JOB_NAME: ${JOB_NAME}"
-                    println "Environment variable ENV_VAR_STRING: ${ENV_VAR_STRING}"
-                    println "Environment variable ENV_VAR_CHOICE: ${ENV_VAR_CHOICE}"
-                    println "Environment variable ENV_VAR_BOOLEAN: ${ENV_VAR_BOOLEAN}"
+                    // Access and use the environment variables
+                    echo "String Environment Variable: ${ENV_VAR_STRING}"
+                    echo "Choice Environment Variable: ${ENV_VAR_CHOICE}"
+                    echo "Boolean Environment Variable: ${ENV_VAR_BOOLEAN}"
+                    
+                    // Use global variables
+                    echo "Build Number: ${BUILD_NUMBER}"
+                    echo "Job Name: ${JOB_NAME}"
+                    echo "Workspace: ${WORKSPACE}"
+                    echo "Node Name: ${NODE_NAME}"
                 }
             }
         }
@@ -34,7 +44,6 @@ pipeline {
             post {
                 success {
                     echo 'Stage 2 completed successfully'
-                    currentBuild.result = 'SUCCESS' // Set the build result to SUCCESS
                 }
             }
         }
@@ -42,8 +51,9 @@ pipeline {
             agent { label 'agent2' }
             when {
                 allOf {
-                    expression { params.CHOICE_ENV == 'Option 1' }
                     branch 'master'
+                    expression { params.CHOICE_ENV == 'DEV' }
+                    previousStage().result == 'SUCCESS'
                 }
             }
             steps {
@@ -54,29 +64,30 @@ pipeline {
             post {
                 success {
                     echo 'Stage 3 completed successfully'
-                    currentBuild.result = 'SUCCESS' // Set the build result to SUCCESS
                 }
             }
         }
         stage('Stage 4') {
             agent { label 'agent2' }
+            when {
+                allOf {
+                    expression { params.BOOLEAN_ENV }
+                    previousStage().result == 'SUCCESS'
+                }
+            }
             steps {
                 script {
-                    println "Performing Stage 4 in agent2"
+                    println "Performing Stage 4 in Agent 2"
                 }
             }
             post {
                 success {
                     echo 'Stage 4 completed successfully'
-                    currentBuild.result = 'SUCCESS' // Set the build result to SUCCESS
                 }
             }
         }
     }
-    triggers {
-        cron('H/5 * * * *')
-        pollSCM('* * * * *')
-    }
+    
     post {
         always {
             echo 'Pipeline completed'
