@@ -1,8 +1,6 @@
 pipeline {
     agent none
-    triggers {
-        cron('H/5 * * * *')
-        pollSCM('* * * * *')
+
     }
     environment {
         ENV_VAR_STRING = "${params.STRING_ENV}"
@@ -51,9 +49,9 @@ pipeline {
             agent { label 'agent2' }
             when {
                 allOf {
-                    branch 'master'
                     expression { params.CHOICE_ENV == 'DEV' }
-                    previousStage().result == 'SUCCESS'
+                    expression { success_of_stage_2 == true }
+                    branch 'master'
                 }
             }
             steps {
@@ -72,7 +70,7 @@ pipeline {
             when {
                 allOf {
                     expression { params.BOOLEAN_ENV }
-                    previousStage().result == 'SUCCESS'
+                    expression { success_of_stage_3 == true }
                 }
             }
             steps {
@@ -87,7 +85,10 @@ pipeline {
             }
         }
     }
-    
+    triggers {
+        cron('H/5 * * * *')
+        pollSCM('* * * * *')
+    }
     post {
         always {
             echo 'Pipeline completed'
