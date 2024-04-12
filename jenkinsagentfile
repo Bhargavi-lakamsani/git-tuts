@@ -4,6 +4,10 @@ pipeline {
         ENV_VAR_STRING = "${params.STRING_ENV}"
         ENV_VAR_CHOICE = "${params.CHOICE_ENV}"
         ENV_VAR_BOOLEAN = "${params.BOOLEAN_ENV}"
+        // Retrieve secret text credential
+        SECRET_TEXT_CRED = credentials('MY_TOKEN')
+        // Retrieve username/password credential
+        USERNAME_PASSWORD_CRED = credentials('MY_USER_NAME')
     }
     parameters {
         string(name: 'STRING_ENV', defaultValue: 'Default String Value', description: 'Enter a string value')
@@ -67,7 +71,7 @@ pipeline {
             when {
                 allOf {
                     expression { params.BOOLEAN_ENV }
-                    previousStage().result == 'SUCCESS'
+                    expression { previousStage().result == 'SUCCESS' }
                 }
             }
             steps {
@@ -100,12 +104,5 @@ pipeline {
                 subject: "Pipeline ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} Failed",
                 body: "Sorry, your Jenkins pipeline build failed. Please check the logs for details."
         }
-    }
-    
-    environment {
-        // Retrieve secret text credential
-        SECRET_TEXT_CRED = credentials('your_secret_text_credential_id')
-        // Retrieve username/password credential
-        USERNAME_PASSWORD_CRED = credentials('your_username_password_credential_id')
     }
 }
