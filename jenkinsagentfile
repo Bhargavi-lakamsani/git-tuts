@@ -42,7 +42,7 @@ pipeline {
     agent { label 'agent2' }
     when {
         allOf {
-            expression { params.CHOICE_ENV == 'Option 1' }
+            expression { params.CHOICE_ENV == 'DEV' }
             branch 'master'
             previousStage().result == 'SUCCESS'
         }
